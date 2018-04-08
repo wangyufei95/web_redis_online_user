@@ -1,0 +1,13 @@
+#cpp 
+ * .cpp linguist-language=C++ 
+ *.h linguist-language=C/C++ 
+ *.hpp linguist-language=C++ 
+ *.c linguist-language=C 
+ #html 
+ *.css linguist-language=html 
+ *.js linguist-language=html 
+ *.html linguist-language=html 
+ #python 
+ *.py linguist-language=python 
+ #java 
+ *.java linguist-language=java 
