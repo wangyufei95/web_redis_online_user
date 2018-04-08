@@ -1,0 +1,206 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+  <head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logoleke.ico') }}">
+    <title>xxx用户在线统计</title>
+    <script type="text/javascript" src="/static/jquery-1.7.2.js"></script>
+    <script type="text/javascript" src="/static/jquery.jedate.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+    <!-- 引入 echarts.js -->
+
+    <link type="text/css" rel="stylesheet" href="/static/skin/jedate.css"/>
+    <meta charset="utf-8">
+  </head>
+
+  <body style="height: 100%; margin: 0" bgcolor="#F5FFFA" class="bodys">
+  <div class="topmid">
+      <h2 style="text-align:center; color:#1FB5AB; font-family:arial; font-size:30px;"> xxx在线人数统计</h2>
+      <button id="btn_find" style="width:50px; height:25px;color:#1FB5AB;position:fixed; top: 16px;left:60px">查询</button>
+  </div>
+
+  <div class="datepagepos" style=" position:relative; overflow:hidden; color:#1FB5AB; ">
+    <ul>
+      <li class="datep"><input style="width:90px; height:28px;position:relative" class="datainp wicon" id="dateleke" type="text" placeholder="YYYY-MM"  readonly></li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+      var cancel ={
+          minDate:'2018-03-31 23:59:59',
+          maxDate:'2099-12-30 23:59:59'
+      };
+      var opts = $.extend({
+          type:"je",
+          minDate:undefined,
+          maxDate:undefined
+      },cancel);
+      if (opts.type == "je") {
+          $("#optsdate").jeDate({
+              isinitVal: true,
+              festival: true,
+              ishmsVal: false,
+              minDate: opts.minDate,
+              maxDate: opts.maxDate,
+              format: "YYYY-MM-DD hh:mm",
+              zIndex: 3000
+          })
+      }
+
+      var start = {
+          format: 'YYYY-MM-DD hh:mm:ss',
+          minDate: '2018-03-31 23:59:59', //设定最小日期为当前日期
+          festival:true,
+          //isinitVal:true,
+          maxDate: $.nowDate(0), //最大日期
+          choosefun: function(elem,datas){
+              end.minDate = datas; //开始日选好后，重置结束日的最小日期
+          },
+          okfun:function (elem,datas) {
+              alert(datas)
+          }
+      };
+      var end = {
+          format: 'YYYY年MM月DD日 hh:mm:ss',
+          minDate: $.nowDate(0), //设定最小日期为当前日期
+          festival:true,
+          //isinitVal:true,
+          maxDate: '2099-06-16 23:59:59', //最大日期
+          choosefun: function(elem,datas){
+              start.maxDate = datas; //将结束日的初始值设定为开始日的最大日期
+          }
+      };
+      $("#inpstart").jeDate(start);
+      $("#inpend").jeDate(end);
+
+
+      $("#dateleke").jeDate({
+          isinitVal:true,
+          festival:true,
+          ishmsVal:false,
+          minDate: '2018-03-31 23:59:59',
+          maxDate: $.nowDate(0),
+          format:"YYYY-MM",
+          zIndex:3000,
+      });
+      function testShow(elem){
+          $.jeDate(elem,{
+              insTrigger:false,
+              isinitVal:true,
+              festival:true,
+              ishmsVal:false,
+              minDate: '2018-03-31 23:59:59',
+              maxDate: $.nowDate(0),
+              format:"hh:mm",
+              zIndex:3000,
+          })
+      }
+  </script>
+  <div id="container" style="height: 85%"></div>
+  <script type="text/javascript">
+      var dom = document.getElementById("container");
+      var myChart = echarts.init(dom);
+      var app = {};
+      option = null;
+      option = {
+          tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                  type: 'cross'
+              }
+          },
+          toolbox: {
+              show: true,
+              top: 0,
+              right:30,
+              feature: {
+                  saveAsImage: {
+                  }
+              }
+          },
+          xAxis:  {
+              type: 'category',
+              boundaryGap: false,
+              splitLine:{
+                  show:false
+              },
+              data:[]
+          },
+          yAxis: {
+              type: 'value',
+              axisLabel: {
+                  formatter: '{value} 人'
+              },
+              axisPointer: {
+                  snap: true
+              },
+              splitLine:{
+                  show:false
+              }
+          },
+          visualMap: {
+              show: false,
+              dimension: 0,
+              pieces: [ {
+                  gt: 1,
+                  lte: 31,
+                  color: '#1FB5AB'
+              },]
+          },
+          series: []
+      };
+
+      if (option && typeof option === "object") {
+          myChart.setOption(option, true);
+      };
+
+      $(document).ready(function() {
+       $("#btn_find").on('click', function() {
+           var result = $("#dateleke").val();
+           var postData = {"date": result};
+           $.ajax({
+               url: "/redisdata",
+               type: "POST",
+               contentType: "application/json;charset=UTF-8",
+               data: JSON.stringify(postData),
+               dataType: 'json',
+               success: function (jsonData) {
+                   if (jsonData) {
+                       data = jsonData.data
+                       var keyList = [];
+                       var valueList = [];
+                       for (var j = 0; j < data.lvalue.length; j++) {
+                           keyList.push(data.lkey[j]);
+                           valueList.push(data.lvalue[j]);
+                       }
+                       myChart.hideLoading();
+                       option1 = myChart.getOption();
+                       var legendvalue = {data:keyList, axisLabel: {formatter: '{value} 日'}};
+                       var serisekey = {name:'在线用户数', type:'line', smooth: true, data:valueList};
+                       option1.xAxis = legendvalue;
+                       option1.series = serisekey;
+                       console.log(option1);
+                       myChart.setOption(option1,true);
+                   }
+               },
+               error: function (errorMsg) {
+                   alert("非常抱歉查询失败！");
+                   myChart.hideLoading();
+               }
+           })
+       })
+   }
+   );
+  </script>
+    <div class="bottommid">
+      <h3> Copyright &copy;2018 XXX</h3>
+    </div>
+  </body>
+</html>
